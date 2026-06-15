@@ -3,7 +3,7 @@ A machine learning project that uses a neural network to design personalized 3D-
 
 Given features such as curl pattern, hair density, strand thickness, porosity, and styling goals, the model predicts the optimal tool geometry: including tooth spacing, tooth length, handle angle, and tip shape, and generates a custom 3D-printable design. 
 
-## Current Status
+## CURRENT STATUS
 
 THIS IS AN EARLY PROTOTYPE. The current version demonstrates the core pipeline: encoding a hair profile, predicting tool dimensions, and generating a simple STL comb model. I am currently refactoring the codebase/improving model evaluation and expanding the dataset.
 
