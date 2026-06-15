@@ -5,3 +5,16 @@ Given features such as curl pattern, hair density, strand thickness, porosity, a
 
 ## Motivation
 Many hair tools are designed as one-size-fits-all products despite significant differences in curl patterns and strand thickness. CurlPrint explores whether ML can generate personalized, 3D-printable hair tools tailored to an individual's hair characteristics. The idea was inspired by my own experiences with naturally textured 3A hair and the lack of customizable hair tools. It's the reason I went straight natural.
+
+## Features
+- Predicts comb dimensions from abovementioned hair characteristics
+- Generates a 3D-printable STL model
+- Modular Python pipeline
+- Easily extendable with additional training data, taken from WOC @ Georgia Tech
+
+## Tech Stack
+- Python
+- NumPy
+- scikit-learn
+- trimesh
+- numpy-stl
