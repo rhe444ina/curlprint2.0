@@ -1,0 +1,9 @@
+curl_pattern,density,strand_thickness,porosity,scalp_sensitivity,goal,tooth_spacing,tooth_length,handle_angle,tip_roundness
+3,2,2,0,1,1,8.5,46,30,0.98
+3,2,2,1,2,1,8.2,44,31,0.96
+3,1,2,0,1,1,8.0,45,29,0.95
+2,2,2,1,1,1,7.5,42,27,0.93
+2,1,2,1,2,2,6.8,38,24,0.88
+1,2,1,2,2,2,5.8,34,20,0.80
+1,1,0,1,0,0,5.0,30,17,0.75
+0,1,0,2,0,0,4.5,26,15,0.70
