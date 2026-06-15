@@ -1,7 +1,7 @@
 from model import HairToolModel
 from generate_stl import create_comb_stl
 
-# Hair profilea
+# Hair profiles
 new_user = [[3,2,2,0,1,1]]
 
 # Predicting dimensions
