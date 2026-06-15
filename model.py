@@ -1,8 +1,6 @@
-!pip install torch numpy trimesh
-
-# CurlPrint prototype:
-# Hair profile -> encoder model -> tool measurements -> simple 3D-printable STL
-# This was inspired by my own lived experiences. Inclusive Hair Tool Design with Neural Networks
+# CurlPrint prototype
+# Mental map: 
+Hair profile -> encoder model -> tool measurements -> simple 3D-printable STL
 
 import torch
 import torch.nn as nn
@@ -11,22 +9,12 @@ import numpy as np
 import trimesh
 
 
-# -----------------------------------------------------------
-# 1. Dataset Collected from WOC @ Tech w/ Curly Hair textures
-# ------------------------------------------------------------
-
-# Features:
-# [curl_pattern, density, strand_thickness, porosity, scalp_sensitivity, goal]
-#
-# curl_pattern: 0=2A/2B, 1=3A/3B, 2=4A/4B, 3=4C
-# density: 0=low, 1=medium, 2=high
-# strand_thickness: 0=fine, 1=medium, 2=coarse
-# porosity: 0=low, 1=medium, 2=high
-# scalp_sensitivity: 0=low, 1=medium, 2=high
-# goal: 0=volume, 1=detangling, 2=definition
+# -------------------------------------
+# 1. Dataset, collected from WOC @ Tech
+# -------------------------------------
 
 X = torch.tensor([
-    [3, 2, 2, 0, 1, 1],  # 4C, high density, coarse, low porosity, detangling
+    [3, 2, 2, 0, 1, 1],
     [2, 2, 2, 1, 2, 1],
     [1, 1, 1, 1, 1, 2],
     [0, 0, 0, 2, 0, 0],
@@ -36,7 +24,6 @@ X = torch.tensor([
     [3, 2, 1, 1, 2, 1],
 ], dtype=torch.float32)
 
-# [tooth_spacing_mm, tooth_length_mm, handle_angle_deg, tip_roundness]
 y = torch.tensor([
     [8.0, 45.0, 30.0, 0.90],
     [7.5, 42.0, 28.0, 0.95],
@@ -50,7 +37,7 @@ y = torch.tensor([
 
 
 # -----------------------------
-# 2. Encoder model
+# 2. Model
 # -----------------------------
 
 class HairEncoder(nn.Module):
@@ -82,53 +69,44 @@ class HairToolModel(nn.Module):
 
     def forward(self, x):
         embedding = self.encoder(x)
-        output = self.predictor(embedding)
-        return output
-
-
-model = HairToolModel()
+        return self.predictor(embedding)
 
 
 # -----------------------------
-# 3. Training the model
+# 3. Training + prediction
 # -----------------------------
 
-criterion = nn.MSELoss()
-optimizer = optim.Adam(model.parameters(), lr=0.01)
+def train_model(epochs=1000, learning_rate=0.01):
+    model = HairToolModel()
+    criterion = nn.MSELoss()
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
-for epoch in range(1000):
-    optimizer.zero_grad()
+    for epoch in range(epochs):
+        optimizer.zero_grad()
 
-    predictions = model(X)
-    loss = criterion(predictions, y)
+        predictions = model(X)
+        loss = criterion(predictions, y)
 
-    loss.backward()
-    optimizer.step()
+        loss.backward()
+        optimizer.step()
 
-    if epoch % 100 == 0:
-        print(f"Epoch {epoch}, Loss: {loss.item():.4f}")
+        if epoch % 100 == 0:
+            print(f"Epoch {epoch}, Loss: {loss.item():.4f}")
+
+    return model
 
 
-# -----------------------------
-# 4. Make prediction
-# -----------------------------
+def predict_tool_params(model, user_profile):
+    model.eval()
 
-new_user = torch.tensor([[3, 2, 2, 0, 1, 1]], dtype=torch.float32)
+    with torch.no_grad():
+        tool_params = model(user_profile).numpy()[0]
 
-with torch.no_grad():
-    tool_params = model(new_user).numpy()[0]
-
-tooth_spacing, tooth_length, handle_angle, tip_roundness = tool_params
-
-print("\nPredicted tool design:")
-print(f"Tooth spacing: {tooth_spacing:.2f} mm")
-print(f"Tooth length: {tooth_length:.2f} mm")
-print(f"Handle angle: {handle_angle:.2f} degrees")
-print(f"Tip roundness: {tip_roundness:.2f}")
+    return tool_params
 
 
 # -----------------------------
-# 5. Generate simple 3D comb STL
+# 4. Generate basic 3D comb STL
 # -----------------------------
 
 def create_comb_stl(
@@ -142,14 +120,12 @@ def create_comb_stl(
 ):
     parts = []
 
-    # Handle/base
     handle = trimesh.creation.box(
         extents=[handle_length, handle_width, handle_thickness]
     )
     handle.apply_translation([handle_length / 2, 0, 0])
     parts.append(handle)
 
-    # Teeth
     start_x = 10
 
     for i in range(num_teeth):
@@ -161,7 +137,6 @@ def create_comb_stl(
             sections=24
         )
 
-        # Rotate tooth so it points downward from handle
         tooth.apply_transform(
             trimesh.transformations.rotation_matrix(
                 np.radians(90),
@@ -172,7 +147,6 @@ def create_comb_stl(
         tooth.apply_translation([x, -tooth_length / 2, 0])
         parts.append(tooth)
 
-        # Rounded tooth tip
         tip = trimesh.creation.icosphere(
             radius=1.7,
             subdivisions=2
@@ -186,8 +160,28 @@ def create_comb_stl(
     print(f"\nSTL saved as {filename}")
 
 
-create_comb_stl(
-    tooth_spacing=float(tooth_spacing),
-    tooth_length=float(tooth_length),
-    filename="curlprint_comb.stl"
-)
+# -----------------------------
+# 5. Running the prototype!!
+# -----------------------------
+
+if __name__ == "__main__":
+    model = train_model()
+
+    new_user = torch.tensor([[3, 2, 2, 0, 1, 1]], dtype=torch.float32)
+
+    tooth_spacing, tooth_length, handle_angle, tip_roundness = predict_tool_params(
+        model,
+        new_user
+    )
+
+    print("\nPredicted tool design:")
+    print(f"Tooth spacing: {tooth_spacing:.2f} mm")
+    print(f"Tooth length: {tooth_length:.2f} mm")
+    print(f"Handle angle: {handle_angle:.2f} degrees")
+    print(f"Tip roundness: {tip_roundness:.2f}")
+
+    create_comb_stl(
+        tooth_spacing=float(tooth_spacing),
+        tooth_length=float(tooth_length),
+        filename="curlprint_comb.stl"
+    )
