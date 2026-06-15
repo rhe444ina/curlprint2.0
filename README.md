@@ -1,5 +1,3 @@
-# curlprint2.0
-
 # CurlPrint
 A machine learning project that uses a neural network to design personalized 3D-printable hair tools based on an individual's hair profile.
 
